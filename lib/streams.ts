@@ -5,21 +5,26 @@ import type { Stream, Gurdwara, StreamWithGurdwara } from './supabase';
  * Fetch all currently live streams with gurdwara information
  */
 export async function getLiveStreams(): Promise<StreamWithGurdwara[]> {
-  const { data, error } = await supabase
-    .from('streams')
-    .select(`
-      *,
-      gurdwara:gurdwaras(*)
-    `)
-    .eq('is_live', true)
-    .order('viewer_count', { ascending: false, nullsFirst: false });
+  try {
+    const { data, error } = await supabase
+      .from('streams')
+      .select(`
+        *,
+        gurdwara:gurdwaras(*)
+      `)
+      .eq('is_live', true)
+      .order('viewer_count', { ascending: false, nullsFirst: false });
 
-  if (error) {
-    console.error('Error fetching live streams:', error);
-    throw error;
+    if (error) {
+      console.error('Error fetching live streams:', error);
+      return [];
+    }
+
+    return (data || []) as StreamWithGurdwara[];
+  } catch (err) {
+    console.error('Error fetching live streams:', err);
+    return [];
   }
-
-  return (data || []) as StreamWithGurdwara[];
 }
 
 /**
@@ -56,14 +61,19 @@ export async function getGurdwaras(onlyWithLiveStreams: boolean = false): Promis
     query = query.gt('active_streams_count', 0);
   }
 
-  const { data, error } = await query;
+  try {
+    const { data, error } = await query;
 
-  if (error) {
-    console.error('Error fetching gurdwaras:', error);
-    throw error;
+    if (error) {
+      console.error('Error fetching gurdwaras:', error);
+      return [];
+    }
+
+    return (data || []) as Gurdwara[];
+  } catch (err) {
+    console.error('Error fetching gurdwaras:', err);
+    return [];
   }
-
-  return (data || []) as Gurdwara[];
 }
 
 /**
