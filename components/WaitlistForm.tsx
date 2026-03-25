@@ -6,12 +6,23 @@ import { supabase } from '@/lib/supabase';
 type Purpose = 'test' | 'donate' | 'notify';
 type DeviceType = 'ios' | 'android';
 
+const REFERRAL_OPTIONS = [
+  'Social Media (Twitter / Instagram)',
+  'Friend or Family',
+  'Gurdwara Sangat',
+  'Search Engine',
+  'YouTube',
+  'Reddit / Forum',
+  'Other',
+];
+
 export default function WaitlistForm() {
   const [firstName, setFirstName] = useState('');
   const [email, setEmail] = useState('');
   const [purpose, setPurpose] = useState<Purpose | null>(null);
   const [deviceType, setDeviceType] = useState<DeviceType | null>(null);
   const [phoneWhatsapp, setPhoneWhatsapp] = useState('');
+  const [referralSource, setReferralSource] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,19 +35,19 @@ export default function WaitlistForm() {
     try {
       // Validate required fields based on purpose
       if (!purpose) {
-        setError("Please select how you'd like to participate");
+        setError("Please select how you'd like to participate.");
         setLoading(false);
         return;
       }
 
       if (purpose === 'test' && !deviceType) {
-        setError('Please select your device type');
+        setError('Please select your device type.');
         setLoading(false);
         return;
       }
 
       if (purpose === 'donate' && !phoneWhatsapp) {
-        setError('Please provide your phone/WhatsApp number');
+        setError('Please provide your phone/WhatsApp number.');
         setLoading(false);
         return;
       }
@@ -63,8 +74,9 @@ export default function WaitlistForm() {
             email,
             is_tester: purpose === 'test',
             is_donor: purpose === 'donate',
-            device_ios: purpose === 'test' ? (deviceType === 'ios') : null,
+            device_ios: purpose === 'test' ? deviceType === 'ios' : null,
             phone_whatsapp: purpose === 'donate' ? phoneWhatsapp : null,
+            referral_source: referralSource || null,
           },
         ]);
 
@@ -76,9 +88,12 @@ export default function WaitlistForm() {
       setPurpose(null);
       setDeviceType(null);
       setPhoneWhatsapp('');
-    } catch (err: any) {
+      setReferralSource('');
+    } catch (err: unknown) {
       console.error('Error joining waitlist:', err);
-      setError(err.message || 'Something went wrong. Please try again.');
+      const message =
+        err instanceof Error ? err.message : 'Something went wrong. Please try again.';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -86,14 +101,37 @@ export default function WaitlistForm() {
 
   if (success) {
     return (
-      <div className="bg-white border-2 border-[#FF9933] rounded-2xl p-8 text-center">
-        <div className="text-5xl mb-4">🙏</div>
-        <h3 className="text-2xl font-bold text-[#000080] mb-2">Thank you!</h3>
-        <p className="text-gray-700">
-          We'll be in touch soon.
-          <br />
-          Waheguru Ji Ka Khalsa, Waheguru Ji Ki Fateh!
-        </p>
+      <div className="max-w-xl mx-auto">
+        <div className="bg-white border-2 border-[#FF9933] rounded-2xl p-8 md:p-10 text-center">
+          <div className="w-16 h-16 rounded-full bg-[#FF9933]/10 flex items-center justify-center mx-auto mb-4">
+            <span className="text-3xl">&#x262C;</span>
+          </div>
+          <h3 className="text-2xl font-bold text-[#000080] mb-3">
+            Thank you for joining!
+          </h3>
+          <p className="text-gray-700 mb-6">
+            We will be in touch soon. Your support means everything to this seva
+            project.
+          </p>
+          <div className="bg-[#000080]/5 rounded-xl p-6 text-left">
+            <p className="gurmukhi-lg text-[#000080] font-semibold mb-2">
+              ਆਨੰਦੁ ਭਇਆ ਮੇਰੀ ਮਾਏ ਸਤਿਗੁਰੂ ਮੈ ਪਾਇਆ ॥
+            </p>
+            <p className="text-gray-600 italic text-sm mb-1">
+              Aanand bha-i-aa meree maa-e Satguroo mai paa-i-aa.
+            </p>
+            <p className="text-gray-700 text-sm">
+              &ldquo;I am in ecstasy, O my mother! I have found my True
+              Guru.&rdquo;
+            </p>
+            <p className="text-gray-400 text-xs mt-2">
+              Sri Guru Granth Sahib Ji, Ang 917
+            </p>
+          </div>
+          <p className="mt-6 text-[#000080] font-semibold">
+            Waheguru Ji Ka Khalsa, Waheguru Ji Ki Fateh!
+          </p>
+        </div>
       </div>
     );
   }
@@ -103,7 +141,10 @@ export default function WaitlistForm() {
       <div className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
         {/* First Name */}
         <div>
-          <label htmlFor="firstName" className="block text-sm font-semibold text-[#000080] mb-2">
+          <label
+            htmlFor="firstName"
+            className="block text-sm font-semibold text-[#000080] mb-2"
+          >
             First Name *
           </label>
           <input
@@ -119,7 +160,10 @@ export default function WaitlistForm() {
 
         {/* Email */}
         <div>
-          <label htmlFor="email" className="block text-sm font-semibold text-[#000080] mb-2">
+          <label
+            htmlFor="email"
+            className="block text-sm font-semibold text-[#000080] mb-2"
+          >
             Email Address *
           </label>
           <input
@@ -131,6 +175,29 @@ export default function WaitlistForm() {
             className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF9933] focus:outline-none transition"
             placeholder="your@email.com"
           />
+        </div>
+
+        {/* How did you hear about us? */}
+        <div>
+          <label
+            htmlFor="referralSource"
+            className="block text-sm font-semibold text-[#000080] mb-2"
+          >
+            How did you hear about us?
+          </label>
+          <select
+            id="referralSource"
+            value={referralSource}
+            onChange={(e) => setReferralSource(e.target.value)}
+            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-[#FF9933] focus:outline-none transition text-gray-700"
+          >
+            <option value="">Select an option</option>
+            {REFERRAL_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Purpose Selection */}
@@ -185,8 +252,11 @@ export default function WaitlistForm() {
 
         {/* Conditional: Device Type (for testers) */}
         {purpose === 'test' && (
-          <div>
-            <label htmlFor="deviceType" className="block text-sm font-semibold text-[#000080] mb-2">
+          <div className="animate-fadeIn">
+            <label
+              htmlFor="deviceType"
+              className="block text-sm font-semibold text-[#000080] mb-2"
+            >
               Primary Device *
             </label>
             <select
@@ -205,8 +275,11 @@ export default function WaitlistForm() {
 
         {/* Conditional: Phone/WhatsApp (for donors) */}
         {purpose === 'donate' && (
-          <div>
-            <label htmlFor="phoneWhatsapp" className="block text-sm font-semibold text-[#000080] mb-2">
+          <div className="animate-fadeIn">
+            <label
+              htmlFor="phoneWhatsapp"
+              className="block text-sm font-semibold text-[#000080] mb-2"
+            >
               Phone / WhatsApp Number *
             </label>
             <input
@@ -234,11 +307,11 @@ export default function WaitlistForm() {
           disabled={loading}
           className="w-full bg-gradient-to-r from-[#FF9933] to-[#000080] text-white px-8 py-4 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50"
         >
-          {loading ? 'Joining...' : 'Join the Waitlist (Jan 5 Launch)'}
+          {loading ? 'Joining...' : 'Join the Waitlist'}
         </button>
 
         <p className="text-xs text-gray-500 text-center">
-          Free forever. No ads. Built as seva for the Sangat.
+          Free forever. No ads. No spam. Built as seva for the Sangat.
         </p>
       </div>
     </form>
