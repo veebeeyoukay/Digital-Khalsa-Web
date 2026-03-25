@@ -2,14 +2,22 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+
+const NAV_LINKS = [
+  { href: '/', label: 'Home' },
+  { href: '/find', label: 'Find Gurbani' },
+  { href: '/streams', label: 'Live Streams' },
+  { href: '/about', label: 'About' },
+];
 
 export default function Navigation() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleScroll = () => {
-      // Hero section is approximately 400-500px tall, so we'll use 100px as threshold
       setIsScrolled(window.scrollY > 100);
     };
 
@@ -17,8 +25,18 @@ export default function Navigation() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
+
   const handleLinkClick = () => {
     setIsMobileMenuOpen(false);
+  };
+
+  const isActive = (href: string) => {
+    if (href === '/') return pathname === '/';
+    return pathname.startsWith(href);
   };
 
   return (
@@ -35,54 +53,45 @@ export default function Navigation() {
           <Link
             href="/"
             onClick={handleLinkClick}
-            className="text-xl md:text-2xl font-bold transition-colors text-[#000080]"
+            className="flex items-center gap-2 text-xl md:text-2xl font-bold transition-colors text-[#000080]"
           >
-            Digital Khalsa
+            <span
+              className="text-2xl md:text-3xl"
+              role="img"
+              aria-label="Khanda"
+            >
+              &#x262C;
+            </span>
+            <span>GurBani Finder</span>
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link
-              href="/"
-              onClick={handleLinkClick}
-              className="font-semibold transition-colors hover:opacity-80 text-[#000080]"
-            >
-              Home
-            </Link>
-            <Link
-              href="/features"
-              onClick={handleLinkClick}
-              className="font-semibold transition-colors hover:opacity-80 text-[#000080]"
-            >
-              Features
-            </Link>
-            <Link
-              href="/about"
-              onClick={handleLinkClick}
-              className="font-semibold transition-colors hover:opacity-80 text-[#000080]"
-            >
-              About Us
-            </Link>
-            <Link
-              href="/resources"
-              onClick={handleLinkClick}
-              className="font-semibold transition-colors hover:opacity-80 text-[#000080]"
-            >
-              Resources
-            </Link>
+            {NAV_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`font-semibold transition-colors relative pb-1 ${
+                  isActive(link.href)
+                    ? 'text-[#FF9933]'
+                    : 'text-[#000080] hover:text-[#FF9933]'
+                }`}
+              >
+                {link.label}
+                {isActive(link.href) && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#FF9933] rounded-full" />
+                )}
+              </Link>
+            ))}
             <Link
               href="/waitlist"
-              onClick={handleLinkClick}
-              className="px-6 py-2 rounded-lg font-semibold transition-all bg-[#000080] text-white hover:bg-[#000060]"
+              className={`px-6 py-2 rounded-lg font-semibold transition-all ${
+                isActive('/waitlist')
+                  ? 'bg-[#FF9933] text-white'
+                  : 'bg-[#000080] text-white hover:bg-[#000060]'
+              }`}
             >
-              Waitlist
-            </Link>
-            <Link
-              href="/waitlist"
-              onClick={handleLinkClick}
-              className="px-6 py-2 rounded-lg font-semibold transition-all bg-[#FF9933] text-white hover:bg-[#FF8800]"
-            >
-              Donate
+              Join Waitlist
             </Link>
           </div>
 
@@ -118,53 +127,33 @@ export default function Navigation() {
             isMobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
           }`}
         >
-          <div className="py-4 space-y-4 bg-white rounded-b-lg -mx-6 px-6">
-            <Link
-              href="/"
-              onClick={handleLinkClick}
-              className="block font-semibold transition-colors hover:opacity-80 text-[#000080]"
-            >
-              Home
-            </Link>
-            <Link
-              href="/features"
-              onClick={handleLinkClick}
-              className="block font-semibold transition-colors hover:opacity-80 text-[#000080]"
-            >
-              Features
-            </Link>
-            <Link
-              href="/about"
-              onClick={handleLinkClick}
-              className="block font-semibold transition-colors hover:opacity-80 text-[#000080]"
-            >
-              About Us
-            </Link>
-            <Link
-              href="/resources"
-              onClick={handleLinkClick}
-              className="block font-semibold transition-colors hover:opacity-80 text-[#000080]"
-            >
-              Resources
-            </Link>
-            <Link
-              href="/waitlist"
-              onClick={handleLinkClick}
-              className="block px-6 py-2 rounded-lg font-semibold text-center transition-all bg-[#000080] text-white hover:bg-[#000060]"
-            >
-              Waitlist
-            </Link>
-            <Link
-              href="/waitlist"
-              onClick={handleLinkClick}
-              className="block px-6 py-2 rounded-lg font-semibold text-center transition-all bg-[#FF9933] text-white hover:bg-[#FF8800]"
-            >
-              Donate
-            </Link>
+          <div className="py-4 space-y-1 bg-white rounded-b-lg -mx-6 px-6">
+            {NAV_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={handleLinkClick}
+                className={`block py-3 px-4 rounded-lg font-semibold transition-colors ${
+                  isActive(link.href)
+                    ? 'bg-[#FF9933]/10 text-[#FF9933] border-l-4 border-[#FF9933]'
+                    : 'text-[#000080] hover:bg-gray-50'
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+            <div className="pt-2">
+              <Link
+                href="/waitlist"
+                onClick={handleLinkClick}
+                className="block px-6 py-3 rounded-lg font-semibold text-center transition-all bg-[#000080] text-white hover:bg-[#000060]"
+              >
+                Join Waitlist
+              </Link>
+            </div>
           </div>
         </div>
       </div>
     </nav>
   );
 }
-
